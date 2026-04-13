@@ -1,0 +1,191 @@
+{% extends 'core/base.html' %}
+{% block title %}Test Natijalari — SafeChild AI{% endblock %}
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>📊 Test Natijalari</h1>
+    <p>Validatsiya to'plamida 1,773 tasvir bo'yicha baholash natijalari</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <!-- Overall model cards -->
+    <div class="results-cards">
+      <div class="res-card res-yolo8">
+        <div class="rc-model">YOLOv8n</div>
+        <div class="rc-metrics">
+          <div class="rcm"><span>mAP@0.5</span><strong>0.834</strong></div>
+          <div class="rcm"><span>Aniqlik</span><strong>0.866</strong></div>
+          <div class="rcm"><span>Qamrov</span><strong>0.763</strong></div>
+          <div class="rcm"><span>Tezlik</span><strong>4.5ms</strong></div>
+        </div>
+        <div class="rc-bar"><div class="rc-fill" style="width:83.4%"></div></div>
+        <div class="rc-tag">⚡ Eng tezkor model</div>
+      </div>
+      <div class="res-card res-yolo11">
+        <div class="rc-model">YOLO11s</div>
+        <div class="rc-metrics">
+          <div class="rcm"><span>mAP@0.5</span><strong>0.863</strong></div>
+          <div class="rcm"><span>Aniqlik</span><strong>0.897</strong></div>
+          <div class="rcm"><span>Qamrov</span><strong>0.766</strong></div>
+          <div class="rcm"><span>Tezlik</span><strong>6.9ms</strong></div>
+        </div>
+        <div class="rc-bar"><div class="rc-fill" style="width:86.3%"></div></div>
+        <div class="rc-tag">🎯 Eng aniq model</div>
+      </div>
+      <div class="res-card res-yolo26 best-model">
+        <div class="rc-best-badge">🏆 Eng Yaxshi</div>
+        <div class="rc-model">YOLO26s</div>
+        <div class="rc-metrics">
+          <div class="rcm"><span>mAP@0.5</span><strong>0.876</strong></div>
+          <div class="rcm"><span>Aniqlik</span><strong>0.884</strong></div>
+          <div class="rcm"><span>Qamrov</span><strong>0.804</strong></div>
+          <div class="rcm"><span>Tezlik</span><strong>6.6ms</strong></div>
+        </div>
+        <div class="rc-bar"><div class="rc-fill" style="width:87.6%"></div></div>
+        <div class="rc-tag">📈 Eng yuqori mAP</div>
+      </div>
+    </div>
+
+    <!-- Model switcher tabs -->
+    <h2 class="section-title mt-4">Sinflar Bo'yicha Batafsil Natijalar</h2>
+    <div class="model-tabs">
+      <button class="mtab active" data-model="v26">YOLO26s ⭐</button>
+      <button class="mtab" data-model="v11">YOLO11s</button>
+      <button class="mtab" data-model="v8">YOLOv8n</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table" id="perClassTable">
+        <thead>
+          <tr>
+            <th>Sinf</th>
+            <th>Xavf</th>
+            <th>Aniqlik</th>
+            <th>Qamrov</th>
+            <th>mAP@0.5</th>
+            <th>mAP@0.5:0.95</th>
+            <th>mAP Ko'rsatkich</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cls in per_class %}
+          <tr
+            data-v8p="{{ cls.v8p }}" data-v8r="{{ cls.v8r }}" data-v8m="{{ cls.v8m }}" data-v8m95="{{ cls.v8m95 }}"
+            data-v11p="{{ cls.v11p }}" data-v11r="{{ cls.v11r }}" data-v11m="{{ cls.v11m }}" data-v11m95="{{ cls.v11m95 }}"
+            data-v26p="{{ cls.v26p }}" data-v26r="{{ cls.v26r }}" data-v26m="{{ cls.v26m }}" data-v26m95="{{ cls.v26m95 }}"
+          >
+            <td>
+              <strong>{{ cls.name }}</strong>
+              <br><small class="text-muted">{{ cls.uz }}</small>
+            </td>
+            <td>
+              {% if cls.danger == "critical" %}<span style="color:#fca5a5;">🔴 Kritik</span>
+              {% elif cls.danger == "high" %}<span style="color:#fdba74;">🟠 Yuqori</span>
+              {% elif cls.danger == "medium" %}<span style="color:#fde047;">🟡 O'rta</span>
+              {% else %}<span style="color:#86efac;">🟢 Past</span>{% endif %}
+            </td>
+            <td class="cell-p">{{ cls.v26p }}</td>
+            <td class="cell-r">{{ cls.v26r }}</td>
+            <td class="cell-m"><strong class="map-val">{{ cls.v26m }}</strong></td>
+            <td class="cell-m95">{{ cls.v26m95 }}</td>
+            <td>
+              <div class="mini-bar">
+                <div class="mini-fill {% if cls.v26m >= 0.9 %}fill-great{% elif cls.v26m >= 0.8 %}fill-good{% else %}fill-low{% endif %}"
+                     style="width:{{ cls.v26m }}%; max-width:100%"></div>
+              </div>
+              <span class="mini-val cell-bar-val">{{ cls.v26m }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Inference speed -->
+    <h2 class="section-title mt-4">⚡ Tahlil Tezligi Taqqoslash</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr><th>Model</th><th>Tayyorlash</th><th>Tahlil</th><th>Yakuniy ishlov</th><th>Jami</th><th>FPS</th></tr>
+        </thead>
+        <tbody>
+          <tr class="model-row-primary"><td><strong>YOLOv8n</strong></td><td>0.2ms</td><td>2.1ms</td><td>2.2ms</td><td><strong>4.5ms</strong></td><td>~222</td></tr>
+          <tr class="model-row-warning"><td><strong>YOLO11s</strong></td><td>0.2ms</td><td>5.0ms</td><td>1.7ms</td><td><strong>6.9ms</strong></td><td>~145</td></tr>
+          <tr class="model-row-success"><td><strong>YOLO26s</strong></td><td>0.2ms</td><td>6.1ms</td><td>0.3ms</td><td><strong>6.6ms</strong></td><td>~152</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Misty Robot -->
+    <h2 class="section-title mt-4">🤖 Misty Robot Platformasida Sinov</h2>
+    <div class="misty-results">
+      <div class="misty-grid">
+        <div class="misty-card">
+          <h4>YOLOv8n</h4>
+          <div class="lux-bar"><span>500 lux</span><div class="lb-fill" style="width:88.5%"></div><span>88.5%</span></div>
+          <div class="lux-bar"><span>200 lux</span><div class="lb-fill" style="width:84.2%"></div><span>84.2%</span></div>
+          <div class="lux-bar"><span>50 lux</span><div class="lb-fill warn" style="width:80.2%"></div><span>80.2%</span></div>
+        </div>
+        <div class="misty-card">
+          <h4>YOLO11s</h4>
+          <div class="lux-bar"><span>500 lux</span><div class="lb-fill" style="width:92.3%"></div><span>92.3%</span></div>
+          <div class="lux-bar"><span>200 lux</span><div class="lb-fill" style="width:88.7%"></div><span>88.7%</span></div>
+          <div class="lux-bar"><span>50 lux</span><div class="lb-fill warn" style="width:82.6%"></div><span>82.6%</span></div>
+        </div>
+        <div class="misty-card best-misty">
+          <div class="best-badge">🏆 Eng yaxshi</div>
+          <h4>YOLO26s</h4>
+          <div class="lux-bar"><span>500 lux</span><div class="lb-fill best" style="width:94.8%"></div><span>94.8%</span></div>
+          <div class="lux-bar"><span>200 lux</span><div class="lb-fill best" style="width:91.2%"></div><span>91.2%</span></div>
+          <div class="lux-bar"><span>50 lux</span><div class="lb-fill warn" style="width:84.1%"></div><span>84.1%</span></div>
+        </div>
+      </div>
+      <p class="misty-note">* 90 ta sinov epizodi — har bir yoritilish sharoitida 10 ta obyekt × 3 takrorlash</p>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+const tabs = document.querySelectorAll('.mtab');
+const rows = document.querySelectorAll('#perClassTable tbody tr');
+
+// Fix bar widths (Django outputs float, convert to %)
+rows.forEach(row => {
+  const fill = row.querySelector('.mini-fill');
+  if (fill) {
+    const v = parseFloat(fill.style.width);
+    fill.style.width = (v * 100) + '%';
+  }
+});
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', function() {
+    tabs.forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    const m = this.dataset.model;
+    rows.forEach(row => {
+      const p   = row.dataset[m+'p'];
+      const r   = row.dataset[m+'r'];
+      const map50 = row.dataset[m+'m'];
+      const map95 = row.dataset[m+'m95'];
+      row.querySelector('.cell-p').textContent  = p;
+      row.querySelector('.cell-r').textContent  = r;
+      row.querySelector('.cell-m').innerHTML = '<strong class="map-val">'+map50+'</strong>';
+      row.querySelector('.cell-m95').textContent = map95;
+      const fill = row.querySelector('.mini-fill');
+      const val = parseFloat(map50);
+      fill.style.width = (val * 100) + '%';
+      fill.className = 'mini-fill ' + (val>=0.9?'fill-great':val>=0.8?'fill-good':'fill-low');
+      row.querySelector('.cell-bar-val').textContent = map50;
+    });
+  });
+});
+</script>
+{% endblock %}

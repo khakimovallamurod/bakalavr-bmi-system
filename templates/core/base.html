@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}SafeChild AI — Bolalar Xavfsizligi{% endblock %}</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="{% url 'home' %}" class="nav-logo">
+      <img src="{% static 'images/logo.png' %}" alt="SafeChild AI logotipi" class="logo-image">
+      <span class="logo-text">SafeChild<span class="logo-sub">AI</span></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menyu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">🏠 Bosh sahifa</a></li>
+      <li><a href="{% url 'about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">📖 Loyiha haqida</a></li>
+      <li><a href="{% url 'examples' %}" class="nav-link {% if request.resolver_match.url_name == 'examples' %}active{% endif %}">🖼 Namunalar</a></li>
+      <li><a href="{% url 'results' %}" class="nav-link {% if request.resolver_match.url_name == 'results' %}active{% endif %}">📊 Test natijalari</a></li>
+      <li><a href="{% url 'demo' %}" class="nav-link nav-cta {% if request.resolver_match.url_name == 'demo' %}active{% endif %}">🎥 Demo</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="{% static 'images/logo.png' %}" alt="SafeChild AI logotipi" class="footer-logo-image">
+          <span>SafeChild AI</span>
+        </div>
+        <p>Bolalar xavfsizligini ta'minlashga qaratilgan sun'iy intellekt tizimi. ONNX Runtime va YOLO arxitekturasi asosida ishlaydi.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Sahifalar</h4>
+        <ul>
+          <li><a href="{% url 'home' %}">🏠 Bosh sahifa</a></li>
+          <li><a href="{% url 'about' %}">📖 Loyiha haqida</a></li>
+          <li><a href="{% url 'examples' %}">🖼 Namunalar</a></li>
+          <li><a href="{% url 'results' %}">📊 Test natijalari</a></li>
+          <li><a href="{% url 'demo' %}">🎥 Demo</a></li>
+        </ul>
+      </div>
+      <div class="footer-stats">
+        <h4>Statistika</h4>
+        <div class="footer-stat"><span>10</span> Sinf</div>
+        <div class="footer-stat"><span>15,668</span> Tasvir</div>
+        <div class="footer-stat"><span>87.6%</span> mAP@0.5</div>
+        <div class="footer-stat"><span>ONNX</span> Runtime</div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Xakimov A.A. & Nazarov F.M. — Samarqand Davlat Universiteti</p>
+    </div>
+  </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

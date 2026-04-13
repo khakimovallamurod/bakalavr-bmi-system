@@ -1,0 +1,184 @@
+{% extends 'core/base.html' %}
+{% block title %}SafeChild AI — Bolalar Xavfsizligi Tizimi{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🤖 Sun'iy Intellekt &nbsp;•&nbsp; ONNX Runtime &nbsp;•&nbsp; Real Vaqt</div>
+    <h1 class="hero-title">
+      Bolalar Uchun<br>
+      <span class="accent-text">Xavfli Obyektlarni</span><br>
+      Aniqlash Tizimi
+    </h1>
+    <p class="hero-subtitle">
+      SafeChild AI — 10 ta xavfli obyektni real vaqt rejimida aniqlaydigan
+      sun'iy intellekt platformasi. ONNX Runtime va YOLO arxitekturasi asosida.
+    </p>
+    <div class="hero-actions">
+      <a href="{% url 'demo' %}" class="btn btn-primary btn-lg">🎥 Sinab Ko'rish</a>
+      <a href="{% url 'about' %}" class="btn btn-outline btn-lg">📖 Batafsil</a>
+    </div>
+    <div class="hero-metrics">
+      <div class="metric">
+        <div class="metric-value">87.6%</div>
+        <div class="metric-label">mAP@0.5</div>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric">
+        <div class="metric-value">4.5ms</div>
+        <div class="metric-label">Tahlil vaqti</div>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric">
+        <div class="metric-value">10</div>
+        <div class="metric-label">Sinflar</div>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric">
+        <div class="metric-value">15668</div>
+        <div class="metric-label">Tasvirlar</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section section-light">
+  <div class="container">
+    <div class="section-header">
+      <h2>Qanday Ishlaydi?</h2>
+      <p>To'rt bosqichli real vaqt aniqlash pipeline</p>
+    </div>
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="step-icon">📷</div>
+        <div class="step-num">1</div>
+        <h3>Tasvir / Video</h3>
+        <p>Kamera yoki fayldan rasm va video olish</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-icon">🧠</div>
+        <div class="step-num">2</div>
+        <h3>ONNX Model</h3>
+        <p>YOLO26s modeli ONNX Runtime orqali ishga tushadi</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-icon">🎯</div>
+        <div class="step-num">3</div>
+        <h3>Natija</h3>
+        <p>Chegara chizig'i, sinf nomi va ishonch darajasi</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-icon">🚨</div>
+        <div class="step-num">4</div>
+        <h3>Ogohlantirish</h3>
+        <p>Xavf darajasi tahlili va xulosa chiqarish</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DETECTED CLASSES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Aniqlanadigan Obyektlar</h2>
+      <p>10 ta sinf — 4 ta xavf darajasi</p>
+    </div>
+    <div class="classes-grid">
+      {% for cls in classes %}
+      <div class="class-card danger-{{ cls.danger }}">
+        <div class="class-icon">{{ cls.icon }}</div>
+        <div class="class-name">{{ cls.en }}</div>
+        <div class="class-uz">{{ cls.name }}</div>
+        <div class="danger-badge">
+          {% if cls.danger == "critical" %}🔴 Kritik
+          {% elif cls.danger == "high" %}🟠 Yuqori
+          {% elif cls.danger == "medium" %}🟡 O'rta
+          {% else %}🟢 Past{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header light">
+      <h2>Dataset va Model Statistikasi</h2>
+      <p>SafeChild AI to'plami — 3 ta model — amaliy natijalar</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">🖼</div><div class="stat-value">15,668</div><div class="stat-label">Jami tasvirlar</div></div>
+      <div class="stat-card"><div class="stat-icon">📌</div><div class="stat-value">21,944</div><div class="stat-label">Annotatsiyalar</div></div>
+      <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value">87.6%</div><div class="stat-label">mAP@0.5 (YOLO26s)</div></div>
+      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value">4.5ms</div><div class="stat-label">Tahlil vaqti (YOLOv8n)</div></div>
+      <div class="stat-card"><div class="stat-icon">🤖</div><div class="stat-value">3</div><div class="stat-label">Model varianti</div></div>
+      <div class="stat-card"><div class="stat-icon">🏷</div><div class="stat-value">10</div><div class="stat-label">Obyekt sinflari</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODEL COMPARISON -->
+<section class="section section-light">
+  <div class="container">
+    <div class="section-header">
+      <h2>Modellar Taqqoslash</h2>
+      <p>YOLOv8n, YOLO11s va YOLO26s — validatsiya natijalari</p>
+    </div>
+    <div class="results-cards">
+      <div class="res-card res-yolo8">
+        <div class="rc-model">YOLOv8n</div>
+        <div class="rc-metrics">
+          <div class="rcm"><span>mAP@0.5</span><strong>0.834</strong></div>
+          <div class="rcm"><span>Aniqlik</span><strong>0.866</strong></div>
+          <div class="rcm"><span>Qamrov</span><strong>0.763</strong></div>
+          <div class="rcm"><span>Tezlik</span><strong>4.5ms</strong></div>
+        </div>
+        <div class="rc-bar"><div class="rc-fill" style="width:83.4%"></div></div>
+        <div class="rc-tag">⚡ Eng tezkor model</div>
+      </div>
+      <div class="res-card res-yolo11">
+        <div class="rc-model">YOLO11s</div>
+        <div class="rc-metrics">
+          <div class="rcm"><span>mAP@0.5</span><strong>0.863</strong></div>
+          <div class="rcm"><span>Aniqlik</span><strong>0.897</strong></div>
+          <div class="rcm"><span>Qamrov</span><strong>0.766</strong></div>
+          <div class="rcm"><span>Tezlik</span><strong>6.9ms</strong></div>
+        </div>
+        <div class="rc-bar"><div class="rc-fill" style="width:86.3%"></div></div>
+        <div class="rc-tag">🎯 Eng aniq model</div>
+      </div>
+      <div class="res-card res-yolo26 best-model">
+        <div class="rc-best-badge">🏆 Eng Yaxshi</div>
+        <div class="rc-model">YOLO26s</div>
+        <div class="rc-metrics">
+          <div class="rcm"><span>mAP@0.5</span><strong>0.876</strong></div>
+          <div class="rcm"><span>Aniqlik</span><strong>0.884</strong></div>
+          <div class="rcm"><span>Qamrov</span><strong>0.804</strong></div>
+          <div class="rcm"><span>Tezlik</span><strong>6.6ms</strong></div>
+        </div>
+        <div class="rc-bar"><div class="rc-fill" style="width:87.6%"></div></div>
+        <div class="rc-tag">📈 Eng yuqori mAP</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section cta-section">
+  <div class="container text-center">
+    <h2>Hoziroq Sinab Ko'ring!</h2>
+    <p>Rasmingizni yuklab, real vaqtda xavfli obyektlarni aniqlang</p>
+    <a href="{% url 'demo' %}" class="btn btn-primary btn-xl">🎥 Demo Sahifasiga O'tish →</a>
+  </div>
+</section>
+
+{% endblock %}

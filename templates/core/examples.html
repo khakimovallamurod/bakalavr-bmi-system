@@ -1,0 +1,99 @@
+{% extends 'core/base.html' %}
+{% block title %}Namunalar — SafeChild AI{% endblock %}
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>🖼 Namunalar</h1>
+    <p>Model tomonidan aniqlangan xavfli obyektlar namunalari</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">Hammasi</button>
+      <button class="filter-btn" data-filter="critical">🔴 Kritik</button>
+      <button class="filter-btn" data-filter="high">🟠 Yuqori</button>
+      <button class="filter-btn" data-filter="medium">🟡 O'rta</button>
+      <button class="filter-btn" data-filter="low">🟢 Past</button>
+    </div>
+
+    <div class="examples-grid" id="examplesGrid">
+      {% for ex in examples %}
+      <div class="example-card" data-risk="{{ ex.risk }}">
+        <div class="example-img-wrap">
+          <div class="demo-detection" style="background:#0d0d1a; position:relative; aspect-ratio:4/3; border-radius:0; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+            <div style="font-size:5rem; margin-bottom:8px; filter:drop-shadow(0 0 24px {{ ex.objects.0.color }}88);">{{ ex.icon }}</div>
+            <div style="position:absolute; inset:20px 24px; border:2.5px solid {{ ex.objects.0.color }}; border-radius:8px; pointer-events:none;"></div>
+            <div style="position:absolute; top:17px; left:21px; background:{{ ex.objects.0.color }}; color:#fff; font-size:0.72rem; font-weight:800; padding:4px 10px; border-radius:4px; font-family:monospace;">
+              {{ ex.objects.0.name }} {{ ex.objects.0.conf }}%
+            </div>
+            <div style="position:absolute; top:20px; left:24px; width:14px; height:14px; border-top:3px solid {{ ex.objects.0.color }}; border-left:3px solid {{ ex.objects.0.color }};"></div>
+            <div style="position:absolute; top:20px; right:24px; width:14px; height:14px; border-top:3px solid {{ ex.objects.0.color }}; border-right:3px solid {{ ex.objects.0.color }};"></div>
+            <div style="position:absolute; bottom:20px; left:24px; width:14px; height:14px; border-bottom:3px solid {{ ex.objects.0.color }}; border-left:3px solid {{ ex.objects.0.color }};"></div>
+            <div style="position:absolute; bottom:20px; right:24px; width:14px; height:14px; border-bottom:3px solid {{ ex.objects.0.color }}; border-right:3px solid {{ ex.objects.0.color }};"></div>
+            <div style="position:absolute; bottom:0; left:0; right:0; background:#00000088; padding:5px 12px; font-size:0.7rem; font-family:monospace; color:#666;">SafeChild AI • Demo ko'rinishi</div>
+          </div>
+          <div class="risk-overlay risk-{{ ex.risk }}">
+            {% if ex.risk == "critical" %}🔴 KRITIK{% elif ex.risk == "high" %}🟠 YUQORI{% elif ex.risk == "medium" %}🟡 O'RTA{% else %}🟢 PAST{% endif %}
+          </div>
+        </div>
+
+        <div class="example-info">
+          <h3>{{ ex.title }}</h3>
+          <div class="detection-list">
+            {% for obj in ex.objects %}
+            <div class="detection-item">
+              <span class="det-name">{{ obj.name }}</span>
+              <div class="conf-bar">
+                <div class="conf-fill" style="width:{{ obj.conf }}%; background:{{ obj.color }}"></div>
+              </div>
+              <span class="det-conf">{{ obj.conf }}%</span>
+            </div>
+            {% endfor %}
+          </div>
+          <p class="example-desc">{{ ex.description }}</p>
+          <div class="example-tags">
+            <span class="tag">Chegara chizig'i ✓</span>
+            <span class="tag">Ishonch darajasi ✓</span>
+            {% if ex.objects|length > 1 %}<span class="tag">Ko'p obyekt ✓</span>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="try-cta">
+      <h3>O'z rasmingizni sinab ko'rmoqchimisiz?</h3>
+      <p style="color:#94a3b8; margin-bottom:24px;">Istalgan rasm yuklang — model xavfli obyektlarni avtomatik aniqlaydi</p>
+      <a href="{% url 'demo' %}" class="btn btn-primary btn-lg">🎥 Demo Sahifasiga O'tish →</a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const filter = this.dataset.filter;
+    document.querySelectorAll('.example-card').forEach(card => {
+      card.style.display = (filter === 'all' || card.dataset.risk === filter) ? '' : 'none';
+    });
+  });
+});
+// Ishonch darajasi chiziqlari animatsiyasi
+setTimeout(() => {
+  document.querySelectorAll('.conf-fill').forEach(fill => {
+    const w = fill.style.width;
+    fill.style.width = '0';
+    setTimeout(() => { fill.style.transition = 'width 1s ease'; fill.style.width = w; }, 200);
+  });
+}, 100);
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+venv/
+.claude
+.env
+.codex
+modia/uploads
+media/results

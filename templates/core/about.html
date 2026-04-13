@@ -1,0 +1,186 @@
+{% extends 'core/base.html' %}
+{% block title %}Loyiha Haqida — SafeChild AI{% endblock %}
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>📖 Loyiha Haqida</h1>
+    <p>SafeChild AI — bolalar uchun xavfli uy buyumlarini aniqlash tizimi</p>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">🔄 Aniqlash Pipeline</h2>
+    <div class="pipeline-detail">
+      <div class="pd-step">
+        <div class="pd-icon">📸</div>
+        <h3>1. Kirish</h3>
+        <ul>
+          <li>Rasm yuklash (JPG, PNG, WEBP)</li>
+          <li>Video yuklash (MP4, AVI)</li>
+          <li>Maksimal hajm: 50 MB</li>
+        </ul>
+      </div>
+      <div class="pd-arrow">▼</div>
+      <div class="pd-step">
+        <div class="pd-icon">🔧</div>
+        <h3>2. Oldindan tayyorlash</h3>
+        <ul>
+          <li>Letterbox resize → 640×640</li>
+          <li>BGR → RGB konvertatsiya</li>
+          <li>Normalizatsiya [0, 1]</li>
+        </ul>
+      </div>
+      <div class="pd-arrow">▼</div>
+      <div class="pd-step">
+        <div class="pd-icon">🧠</div>
+        <h3>3. ONNX tahlili</h3>
+        <ul>
+          <li>ONNX Runtime CPU Provider</li>
+          <li>YOLO26s arxitekturasi</li>
+          <li>Chiqish: [1, 14, 8400]</li>
+        </ul>
+      </div>
+      <div class="pd-arrow">▼</div>
+      <div class="pd-step">
+        <div class="pd-icon">📐</div>
+        <h3>4. Yakuniy ishlov</h3>
+        <ul>
+          <li>xywh → xyxy konvertatsiya</li>
+          <li>Ishonch darajasini filtrlash (≥0.35)</li>
+          <li>NMS (IoU ≥ 0.45)</li>
+        </ul>
+      </div>
+      <div class="pd-arrow">▼</div>
+      <div class="pd-step">
+        <div class="pd-icon">🎨</div>
+        <h3>5. Vizualizatsiya</h3>
+        <ul>
+          <li>Bounding box chizish</li>
+          <li>Sinf nomi + ishonch darajasi</li>
+          <li>Xavf darajasi rangi</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS TABLE -->
+<section class="section section-light">
+  <div class="container">
+    <h2 class="section-title">🤖 Modellar Taqqoslash</h2>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Qatlamlar</th>
+            <th>Parametrlar</th>
+            <th>GFLOPs</th>
+            <th>Aniqlik</th>
+            <th>Qamrov</th>
+            <th>F1</th>
+            <th>mAP@0.5</th>
+            <th>mAP@0.5:0.95</th>
+            <th>Tezlik</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in models_data %}
+          <tr class="model-row-{{ m.color }}">
+            <td><strong>{{ m.name }}</strong></td>
+            <td>{{ m.layers }}</td>
+            <td>{{ m.params }}</td>
+            <td>{{ m.gflops }}</td>
+            <td>{{ m.precision }}</td>
+            <td>{{ m.recall }}</td>
+            <td>{{ m.f1 }}</td>
+            <td><strong class="map-val">{{ m.map50 }}</strong></td>
+            <td>{{ m.map9595 }}</td>
+            <td>{{ m.speed }}ms</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- CLASSES INFO -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">⚠️ Xavfli Obyektlar Tasnifi</h2>
+    <div class="danger-legend">
+      <div class="dl-item critical"><span>🔴</span> Kritik — Bolalar uchun o'ta xavfli (pichoq, qaychi, sanchqi)</div>
+      <div class="dl-item high"><span>🟠</span> Yuqori — Jiddiy xavf tug'diruvchi (bolta, bolga, otvyortka)</div>
+      <div class="dl-item medium"><span>🟡</span> O'rta — Ehtiyot kerak (qisqich, stepler)</div>
+      <div class="dl-item low"><span>🟢</span> Past — Minimal xavf (kalit, tanga)</div>
+    </div>
+    <div class="classes-detail-grid">
+      {% for cls in classes_info %}
+      <div class="class-detail-card danger-border-{{ cls.danger }}">
+        <div class="cdc-header">
+          <span class="cdc-icon">{{ cls.icon }}</span>
+          <div>
+            <div class="cdc-name">{{ cls.en }}</div>
+            <div class="cdc-uz">{{ cls.name }}</div>
+          </div>
+          <div class="danger-badge danger-{{ cls.danger }}">
+            {% if cls.danger == "critical" %}🔴 Kritik
+            {% elif cls.danger == "high" %}🟠 Yuqori
+            {% elif cls.danger == "medium" %}🟡 O'rta
+            {% else %}🟢 Past{% endif %}
+          </div>
+        </div>
+        <div class="cdc-count">{{ cls.count }} annotatsiya</div>
+        <div class="cdc-bar">
+          <div class="cdc-fill danger-bg-{{ cls.danger }}" style="width:{{ cls.count|floatformat:0 }}px; max-width:100%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="section section-dark">
+  <div class="container">
+    <h2 class="section-title light">🛠 Texnologiyalar</h2>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-icon">⚙️</div>
+        <h3>ONNX Runtime</h3>
+        <p>Ultralytics ishlatilmasdan, sof ONNX Runtime orqali model ishlatiladi</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🌐</div>
+        <h3>Django</h3>
+        <p>Python web framework — backend va API server sifatida</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">👁</div>
+        <h3>OpenCV</h3>
+        <p>Rasm va video qayta ishlash, bounding box chizish</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🧮</div>
+        <h3>NumPy</h3>
+        <p>Tensor operatsiyalari, NMS va koordinata hisoblash</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🎨</div>
+        <h3>Vanilla JS</h3>
+        <p>Kutubxonasiz toza JavaScript — drag-drop, preview, AJAX</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🏋</div>
+        <h3>SafeChild AI to'plami</h3>
+        <p>10 sinf, 15,668 rasm va Roboflow platformasidagi belgilashlar</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

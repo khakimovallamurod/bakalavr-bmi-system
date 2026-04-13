@@ -1,0 +1,334 @@
+{% extends 'core/base.html' %}
+{% block title %}Demo — SafeChild AI{% endblock %}
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1>🎥 Demo — Sinab Ko'rish</h1>
+    <p>Rasmingizni yuklang va xavfli obyektlarni real vaqtda aniqla</p>
+    {% if not model_available %}
+    <div class="demo-notice">
+      ℹ️ <strong>Demo rejimi:</strong> ONNX model fayli yuklanmagan — tizim simulyatsiya ko'rsatmoqda.
+      Model fayli: <code>models/yolo26s_model.onnx</code>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="demo-layout">
+
+      <div class="upload-panel">
+
+        <div class="upload-tabs">
+          <button class="utab active" id="tabImage" onclick="switchTab('image')">🖼 Rasm</button>
+          <button class="utab" id="tabVideo" onclick="switchTab('video')">🎥 Video</button>
+        </div>
+
+        <div class="upload-zone" id="imageUpload">
+          <div class="drop-area" id="dropZone">
+            <div class="drop-icon">📸</div>
+            <h3>Rasm yuklash</h3>
+            <p>Faylni sudrab tashlang yoki pastdagi tugmani bosing</p>
+            <p class="upload-hint">JPG, PNG, WEBP — Max 50 MB</p>
+            <label class="btn btn-primary mt-2">
+              📁 Fayl Tanlash
+              <input type="file" id="imageInput" accept="image/*" hidden>
+            </label>
+          </div>
+          <div class="preview-area" id="imagePreview" style="display:none">
+            <img id="previewImg" src="" alt="Preview">
+            <button class="btn btn-sm btn-outline" onclick="clearImage()">✕ Tozalash</button>
+          </div>
+          <button class="btn btn-primary btn-full" id="detectBtn" onclick="detectImage()" disabled>
+            🔍 Aniqlashni Boshlash
+          </button>
+        </div>
+
+        <div class="upload-zone" id="videoUpload" style="display:none">
+          <div class="drop-area" id="videoDropZone">
+            <div class="drop-icon">🎬</div>
+            <h3>Video yuklash</h3>
+            <p>MP4, AVI, MOV — Max 50 MB</p>
+            <p class="upload-hint">Birinchi 150 kadr (≈5s) tahlil qilinadi</p>
+            <label class="btn btn-primary mt-2">
+              📁 Video Tanlash
+              <input type="file" id="videoInput" accept="video/*" hidden>
+            </label>
+          </div>
+          <div class="video-preview" id="videoPreview" style="display:none">
+            <video id="previewVideo" controls></video>
+            <div id="videoInfo"></div>
+            <button class="btn btn-sm btn-outline" onclick="clearVideo()">✕ Tozalash</button>
+          </div>
+          <button class="btn btn-primary btn-full" id="videoDetectBtn" onclick="detectVideo()" disabled>
+            🔍 Video Tahlil Qilish
+          </button>
+        </div>
+
+      </div>
+
+      <div class="results-panel">
+        <div class="loading-state" id="loadingState" style="display:none">
+          <div class="spinner"></div>
+          <p>Tahlil qilinmoqda...</p>
+          <div class="loading-bar"><div class="loading-fill"></div></div>
+        </div>
+
+        <div class="idle-state" id="idleState">
+          <div class="idle-icon">🛡️</div>
+          <h3>Natijalar bu yerda ko'rinadi</h3>
+          <p>Rasm yoki video yuklang, so'ng "Aniqlashni Boshlash" tugmasini bosing</p>
+          <div class="idle-steps">
+            <div class="is-step"><span>1</span> Fayl yuklang</div>
+            <div class="is-step"><span>2</span> Aniqlashni boshlang</div>
+            <div class="is-step"><span>3</span> Natijalarni ko'ring</div>
+          </div>
+        </div>
+
+        <div class="result-state" id="resultState" style="display:none">
+
+          <div class="risk-banner" id="riskBanner"></div>
+
+          <div class="comparison-wrapper" id="compWrapper">
+            <div class="comp-pane">
+              <div class="comp-label">📷 Asl rasm</div>
+              <img id="origImg" src="" alt="Original">
+            </div>
+            <div class="comp-divider"></div>
+            <div class="comp-pane">
+              <div class="comp-label">🎯 Aniqlangan natija</div>
+              <img id="predImg" src="" alt="Aniqlangan rasm">
+            </div>
+          </div>
+
+          <div id="videoResult" style="display:none">
+            <div class="comp-label">🎬 Tahlil qilingan video</div>
+            <video id="predVideo" controls style="width:100%; border-radius:12px;"></video>
+          </div>
+
+          <div class="det-list-section">
+            <h4>📋 Aniqlangan Obyektlar</h4>
+            <div id="detList"></div>
+          </div>
+
+          <div class="result-stats" id="resultStats"></div>
+
+          <div class="result-summary" id="resultSummary"></div>
+
+          <div class="result-actions">
+            <button class="btn btn-outline" onclick="downloadResult()">⬇️ Natijani Saqlash</button>
+            <button class="btn btn-primary" onclick="tryAgain()">🔄 Qayta Urinish</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function switchTab(type) {
+  document.getElementById('imageUpload').style.display = type==='image' ? '' : 'none';
+  document.getElementById('videoUpload').style.display = type==='video' ? '' : 'none';
+  document.getElementById('tabImage').classList.toggle('active', type==='image');
+  document.getElementById('tabVideo').classList.toggle('active', type==='video');
+  showIdle();
+}
+
+// Rasm bilan ishlash
+const imageInput = document.getElementById('imageInput');
+imageInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('dropZone').style.display = 'none';
+    document.getElementById('imagePreview').style.display = '';
+    document.getElementById('detectBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Sudrab tashlash
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    imageInput.files = e.dataTransfer.files;
+    imageInput.dispatchEvent(new Event('change'));
+  }
+});
+
+function clearImage() {
+  imageInput.value = '';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('dropZone').style.display = '';
+  document.getElementById('imagePreview').style.display = 'none';
+  document.getElementById('detectBtn').disabled = true;
+  showIdle();
+}
+
+// Video bilan ishlash
+const videoInput = document.getElementById('videoInput');
+videoInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('previewVideo').src = url;
+  document.getElementById('videoInfo').innerHTML = `📁 ${file.name} — ${(file.size/1024/1024).toFixed(1)} MB`;
+  document.getElementById('videoDropZone').style.display = 'none';
+  document.getElementById('videoPreview').style.display = '';
+  document.getElementById('videoDetectBtn').disabled = false;
+});
+
+function clearVideo() {
+  videoInput.value = '';
+  document.getElementById('videoDropZone').style.display = '';
+  document.getElementById('videoPreview').style.display = 'none';
+  document.getElementById('videoDetectBtn').disabled = true;
+  showIdle();
+}
+
+async function detectImage() {
+  const file = imageInput.files[0];
+  if (!file) return;
+  showLoading();
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    const res = await fetch('/predict/image/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF},
+      body: fd
+    });
+    const data = await res.json();
+    if (data.success) showResults(data, 'image');
+    else showError(data.error || 'Xato yuz berdi');
+  } catch(e) { showError('Server bilan aloqa uzildi: '+e.message); }
+}
+
+async function detectVideo() {
+  const file = videoInput.files[0];
+  if (!file) return;
+  showLoading();
+  const fd = new FormData();
+  fd.append('video', file);
+  try {
+    const res = await fetch('/predict/video/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF},
+      body: fd
+    });
+    const data = await res.json();
+    if (data.success) showResults(data, 'video');
+    else showError(data.error || 'Xato yuz berdi');
+  } catch(e) { showError('Server bilan aloqa uzildi: '+e.message); }
+}
+
+function showLoading() {
+  document.getElementById('idleState').style.display = 'none';
+  document.getElementById('resultState').style.display = 'none';
+  document.getElementById('loadingState').style.display = '';
+}
+
+function showIdle() {
+  document.getElementById('idleState').style.display = '';
+  document.getElementById('resultState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'none';
+}
+
+function showError(msg) {
+  showIdle();
+  alert('❌ Xato: ' + msg);
+}
+
+function showResults(data, type) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('idleState').style.display = 'none';
+  document.getElementById('resultState').style.display = '';
+
+  const risk = data.risk;
+  const colors = {critical:'#dc3545', high:'#fd7e14', medium:'#ffc107', low:'#28a745', safe:'#28a745'};
+  const color = colors[risk.risk_level] || '#28a745';
+
+  // Xavf paneli
+  document.getElementById('riskBanner').innerHTML = `
+    <div class="risk-banner-inner" style="background:${color}22; border-color:${color}">
+      <span class="risk-icon" style="color:${color}">${risk.has_danger ? '⚠️' : '✅'}</span>
+      <div>
+        <div class="risk-title" style="color:${color}">${risk.risk_label}</div>
+        <div class="risk-desc">${risk.summary_uz || risk.summary_en}</div>
+      </div>
+      <div class="risk-count">${risk.detected_count} obyekt</div>
+    </div>`;
+
+  // Tasvirlar
+  if (type === 'image') {
+    document.getElementById('compWrapper').style.display = '';
+    document.getElementById('videoResult').style.display = 'none';
+    document.getElementById('origImg').src = data.original_url;
+    document.getElementById('predImg').src = data.predicted_url;
+  } else {
+    document.getElementById('compWrapper').style.display = 'none';
+    document.getElementById('videoResult').style.display = '';
+    document.getElementById('predVideo').src = data.video_url;
+  }
+
+  // Aniqlangan obyektlar ro'yxati
+  const dets = data.detections || data.unique_detections || [];
+  const dangerColors = {critical:'#dc3545', high:'#fd7e14', medium:'#ffc107', low:'#28a745'};
+  const detHtml = dets.length > 0 ? dets.map(d => `
+    <div class="det-item">
+      <div class="det-info">
+        <span class="det-name">${d.class_name} <small>(${d.class_name_en})</small></span>
+        <span class="det-danger" style="color:${dangerColors[d.danger_level]}">${d.danger_label}</span>
+      </div>
+      <div class="conf-wrap">
+        <div class="conf-track">
+          <div class="conf-fill" style="width:${d.confidence_pct}%; background:${dangerColors[d.danger_level]}"></div>
+        </div>
+        <span class="conf-num">${d.confidence_pct}%</span>
+      </div>
+    </div>`).join('') : '<p class="no-det">Hech qanday obyekt aniqlanmadi.</p>';
+  document.getElementById('detList').innerHTML = detHtml;
+
+  // Statistika
+  const ms = data.inference_ms;
+  document.getElementById('resultStats').innerHTML = `
+    <div class="rs-item">⏱ ${ms ? ms+'ms' : '—'}</div>
+    <div class="rs-item">🎯 ${dets.length} obyekt</div>
+    ${data.image_size ? `<div class="rs-item">📐 ${data.image_size}</div>` : ''}
+    ${data.frames_processed ? `<div class="rs-item">🎬 ${data.frames_processed} kadr</div>` : ''}
+    ${data.demo_mode ? '<div class="rs-item demo-tag">🔬 Demo rejim</div>' : ''}`;
+
+  // Xulosa
+  document.getElementById('resultSummary').innerHTML = `
+    <div class="summary-box" style="border-color:${color}">
+      <strong>Xulosa:</strong> ${risk.summary_uz}
+    </div>`;
+}
+
+function tryAgain() { showIdle(); }
+
+function downloadResult() {
+  const img = document.getElementById('predImg');
+  if (img.src) {
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'safechild_ai_natija.jpg';
+    a.click();
+  }
+}
+</script>
+{% endblock %}
